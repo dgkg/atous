@@ -31,6 +31,51 @@ func main() {
 	}
 	fmt.Println(StatusCodes[200])
 	MapTP()
+
+	// tbl := make([]uint, 0, 10)
+	// tbl = []uint{1, 2, 3, 10, 20, 30}
+	// lenTbl := len(tbl) * 200
+	// for i := 0; i < lenTbl; i++ {
+	// 	//fmt.Println(&tbl[i])
+	// 	tbl = append(tbl, uint(i))
+	// 	fmt.Println("len:", len(tbl), "cap:", cap(tbl))
+	// }
+
+	u := User{
+		id:        1,
+		FirstName: "John",
+		LastName:  "Doe",
+		Age:       42,
+		RoleType:  Employee,
+	}
+	fmt.Println(u)
+}
+
+type Role int
+
+const (
+	Admin Role = iota
+	Manager
+	Employee
+	MaxRole
+)
+
+var roleType = [MaxRole]string{
+	Admin:    "role admin",
+	Manager:  "role manager",
+	Employee: "role employee",
+}
+
+func (r Role) String() string {
+	return roleType[r]
+}
+
+type User struct {
+	id        int
+	FirstName string
+	LastName  string
+	Age       int
+	RoleType  Role
 }
 
 func MapTP() {
