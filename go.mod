@@ -1,4 +1,4 @@
-module github.com/dgkg/atous
+module atous
 
 go 1.19
 
