@@ -19,6 +19,15 @@ func main() {
 	r.Run()
 }
 
+// restrives the user from the request body and creates a new user
+func getUser(c *gin.Context) {}
+
+// deletes the user from the request body and creates a new user
+func deleteUser(c *gin.Context) {}
+
+// updates the user from the request body and creates a new user
+func updateUser(c *gin.Context) {}
+
 func createUser(c *gin.Context) {
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
