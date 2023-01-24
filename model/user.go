@@ -64,6 +64,7 @@ func NewUser(email, password string, config *ConfigUser) *User {
 		u.LastName = config.LastName
 		u.Phone = config.Phone
 	}
+	u.CreateAt = time.Now()
 	return &u
 }
 
