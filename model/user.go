@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -28,21 +30,41 @@ func (r Role) String() string {
 }
 
 type User struct {
-	ID        string `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Age       int    `json:"age"`
-	RoleType  Role   `json:"role_type"`
+	DBData
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	RoleType Role   `json:"role_type"`
+	ConfigUser
 }
 
-func NewUser(firstName, lastName string, age int) *User {
-	return &User{
-		ID:        uuid.NewString(),
-		FirstName: firstName,
-		LastName:  lastName,
-		Age:       age,
-		RoleType:  Customer,
+type DBData struct {
+	ID string `json:"id"`
+	// DB dates.
+	CreateAt time.Time  `json:"create_at"`
+	UpdateAt time.Time  `json:"update_at"`
+	DeleteAt *time.Time `json:"delete_at"`
+}
+
+type ConfigUser struct {
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Phone     string `json:"phone"`
+	Age       int    `json:"age"`
+}
+
+func NewUser(email, password string, config *ConfigUser) *User {
+	var u User
+	u.ID = uuid.NewString()
+	u.Email = email
+	u.Password = password
+	u.RoleType = Customer
+	if config != nil {
+		u.Age = config.Age
+		u.FirstName = config.FirstName
+		u.LastName = config.LastName
+		u.Phone = config.Phone
 	}
+	return &u
 }
 
 var UserList = map[string]*User{}

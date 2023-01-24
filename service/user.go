@@ -73,7 +73,10 @@ func createUser(c *gin.Context) {
 		return
 	}
 
-	user = *model.NewUser(user.FirstName, user.LastName, user.Age)
+	user = *model.NewUser(user.FirstName, user.LastName, &model.ConfigUser{
+		Age: user.Age,
+	})
+
 	model.UserList[user.ID] = &user
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
