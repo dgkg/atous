@@ -1,12 +1,17 @@
 package service
 
-import "github.com/gin-gonic/gin"
+import (
+	"atous/db"
 
-func New(r *gin.Engine) {
-	r.POST("/users", createUser)
-	r.GET("/users", getListUsers)
-	r.GET("/users/:id/say-hi", sayHiUser)
-	r.GET("/users/:id", getUser)
-	r.DELETE("/users/:id", deleteUser)
-	r.PATCH("/users/:id", updateUser)
+	"github.com/gin-gonic/gin"
+)
+
+func New(r *gin.Engine, db *db.DB) {
+	su := &ServiceUser{db: db}
+	r.POST("/users", su.createUser)
+	r.GET("/users", su.getListUsers)
+	r.GET("/users/:id/say-hi", su.sayHiUser)
+	r.GET("/users/:id", su.getUser)
+	r.DELETE("/users/:id", su.deleteUser)
+	r.PATCH("/users/:id", su.updateUser)
 }

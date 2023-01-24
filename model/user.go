@@ -9,8 +9,8 @@ import (
 type Role int
 
 const (
-	Admin Role = iota + 1
-	RestorantManager
+	admin Role = iota + 1
+	RestaurantManager
 	Customer
 	Driver
 	Undefined
@@ -18,11 +18,11 @@ const (
 )
 
 var roleType = [MaxRole]string{
-	Admin:            "admin",
-	RestorantManager: "restorant manager",
-	Customer:         "customer",
-	Driver:           "driver",
-	Undefined:        "undefined",
+	admin:             "admin",
+	RestaurantManager: "restaurant manager",
+	Customer:          "customer",
+	Driver:            "driver",
+	Undefined:         "undefined",
 }
 
 func (r Role) String() string {
@@ -67,8 +67,6 @@ func NewUser(email, password string, config *ConfigUser) *User {
 	u.CreateAt = time.Now()
 	return &u
 }
-
-var UserList = map[string]*User{}
 
 func (u *User) SayHi() string {
 	return "Hello " + u.FirstName

@@ -1,10 +1,12 @@
 package main
 
 import (
-	"atous/service"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+
+	"atous/db"
+	"atous/service"
 )
 
 func init() {
@@ -13,6 +15,8 @@ func init() {
 
 func main() {
 	r := gin.Default()
-	service.New(r)
+	dbConn := db.New()
+	service.New(r, dbConn)
 	r.Run()
+
 }

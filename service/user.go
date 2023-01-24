@@ -1,20 +1,26 @@
 package service
 
 import (
-	"atous/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"atous/db"
+	"atous/model"
 )
 
-func getListUsers(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"users": model.UserList})
+type ServiceUser struct {
+	db *db.DB
+}
+
+func (su *ServiceUser) getListUsers(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"users": db.UserList})
 }
 
 // restrives the user from the request body
-func getUser(c *gin.Context) {
+func (su *ServiceUser) getUser(c *gin.Context) {
 	id := c.Param("id")
-	user, ok := model.UserList[id]
+	user, ok := db.UserList[id]
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -23,21 +29,21 @@ func getUser(c *gin.Context) {
 }
 
 // deletes the user from the request body
-func deleteUser(c *gin.Context) {
+func (su *ServiceUser) deleteUser(c *gin.Context) {
 	id := c.Param("id")
-	_, ok := model.UserList[id]
+	_, ok := db.UserList[id]
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	delete(model.UserList, id)
+	delete(db.UserList, id)
 	c.JSON(http.StatusAccepted, nil)
 }
 
 // updates the user from the request body
-func updateUser(c *gin.Context) {
+func (su *ServiceUser) updateUser(c *gin.Context) {
 	id := c.Param("id")
-	user, ok := model.UserList[id]
+	user, ok := db.UserList[id]
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -66,7 +72,7 @@ func updateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
-func createUser(c *gin.Context) {
+func (su *ServiceUser) createUser(c *gin.Context) {
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -77,13 +83,13 @@ func createUser(c *gin.Context) {
 		Age: user.Age,
 	})
 
-	model.UserList[user.ID] = &user
+	db.UserList[user.ID] = &user
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
-func sayHiUser(c *gin.Context) {
+func (su *ServiceUser) sayHiUser(c *gin.Context) {
 	id := c.Param("id")
-	user, ok := model.UserList[id]
+	user, ok := db.UserList[id]
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return

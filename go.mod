@@ -3,6 +3,7 @@ module atous
 go 1.19
 
 require (
+	github.com/boltdb/bolt v1.3.1
 	github.com/gin-gonic/gin v1.8.2
 	github.com/google/uuid v1.3.0
 )
