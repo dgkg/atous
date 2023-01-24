@@ -2,11 +2,14 @@ package config
 
 import "os"
 
-func Exec() string {
-	return "Hello World"
+// Config is the configuration for the application
+type Config struct {
+	DBName string
 }
 
-var (
-	Login = os.Getenv("TEST_LOGIN")
-	Pass  = os.Getenv("TEST_PASS")
-)
+// New creates a new configuration
+func New() *Config {
+	return &Config{
+		DBName: os.Getenv("ATOUS_DB_NAME"),
+	}
+}
