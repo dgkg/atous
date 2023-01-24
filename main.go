@@ -1,9 +1,8 @@
 package main
 
 import (
-	"atous/model"
+	"atous/service"
 	"fmt"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,38 +13,6 @@ func init() {
 
 func main() {
 	r := gin.Default()
-	r.POST("/users", createUser)
-	r.GET("/users/:id/say-hi", sayHiUser)
+	service.New(r)
 	r.Run()
-}
-
-// restrives the user from the request body and creates a new user
-func getUser(c *gin.Context) {}
-
-// deletes the user from the request body and creates a new user
-func deleteUser(c *gin.Context) {}
-
-// updates the user from the request body and creates a new user
-func updateUser(c *gin.Context) {}
-
-func createUser(c *gin.Context) {
-	var user model.User
-	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	user = *model.NewUser(user.FirstName, user.LastName, user.Age)
-	model.UserList[user.ID] = &user
-	c.JSON(http.StatusOK, gin.H{"user": user})
-}
-
-func sayHiUser(c *gin.Context) {
-	id := c.Param("id")
-	user, ok := model.UserList[id]
-	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": user.SayHi()})
 }
