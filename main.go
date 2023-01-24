@@ -18,5 +18,4 @@ func main() {
 	dbConn := db.New()
 	service.New(r, dbConn)
 	r.Run()
-
 }
