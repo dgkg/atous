@@ -44,3 +44,9 @@ func NewUser(firstName, lastName string, age int) *User {
 		RoleType:  Customer,
 	}
 }
+
+var UserList = map[string]*User{}
+
+func (u *User) SayHi() string {
+	return "Hello " + u.FirstName
+}
