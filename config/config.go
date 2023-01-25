@@ -4,7 +4,8 @@ import "os"
 
 // Config is the configuration for the application
 type Config struct {
-	DBName string
+	DBName       string
+	GoogleAPIKey string
 }
 
 // New creates a new configuration
@@ -13,7 +14,12 @@ func New() *Config {
 	if dbName == "" {
 		dbName = "atous.db"
 	}
+	googleApiKey := os.Getenv("ATOUS_GOOGLE_API_KEY")
+	if googleApiKey == "" {
+		googleApiKey = "AIzaSyAU9ZJtU14RM2QNndxY0Z8TJ2zXLwt3Fnk"
+	}
 	return &Config{
-		DBName: dbName,
+		DBName:       dbName,
+		GoogleAPIKey: googleApiKey,
 	}
 }

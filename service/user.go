@@ -82,6 +82,12 @@ func (su *ServiceUser) update(c *gin.Context) {
 		}
 	}
 
+	if value, ok := newUser["role_type"]; ok {
+		if v, ok := value.(string); ok {
+			user.RoleType = model.ToRoleType(v)
+		}
+	}
+
 	err = su.db.UpdateUser(id, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

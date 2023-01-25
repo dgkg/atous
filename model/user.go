@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,7 +11,7 @@ import (
 type Role int
 
 const (
-	admin Role = iota + 1
+	Admin Role = iota + 1
 	RestaurantManager
 	Customer
 	Driver
@@ -18,7 +20,7 @@ const (
 )
 
 var roleType = [MaxRole]string{
-	admin:             "admin",
+	Admin:             "admin",
 	RestaurantManager: "restaurant manager",
 	Customer:          "customer",
 	Driver:            "driver",
@@ -27,6 +29,40 @@ var roleType = [MaxRole]string{
 
 func (r Role) String() string {
 	return roleType[r]
+}
+
+func ToRoleType(s string) Role {
+	switch s {
+	case "admin":
+		return Admin
+	case "restaurant manager":
+		return RestaurantManager
+	case "customer":
+		return Customer
+	case "driver":
+		return Driver
+	default:
+		return Undefined
+	}
+}
+
+func (r *Role) UnmarshalJSON(text []byte) error {
+	log.Println("UnmarshalJSON recived Role:", string(text))
+
+	var s string
+	if err := json.Unmarshal(text, &s); err != nil {
+		return err
+	}
+	log.Println("UnmarshalJSON unmarshal Role:", s)
+
+	*r = ToRoleType(s)
+
+	return nil
+}
+
+func (r Role) MarshalJSON() ([]byte, error) {
+	log.Println("MarshalJSON Role:", r.String())
+	return []byte(`"` + r.String() + `"`), nil
 }
 
 type User struct {
@@ -65,6 +101,9 @@ func NewUser(email, password string, config *ConfigUser) *User {
 		u.Phone = config.Phone
 	}
 	u.CreateAt = time.Now()
+
+	log.Println("Model : NewUser:", u)
+
 	return &u
 }
 
