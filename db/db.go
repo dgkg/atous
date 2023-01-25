@@ -112,3 +112,31 @@ func (s *DB) GetUser(id string) (*model.User, error) {
 
 	return &u, nil
 }
+
+func (s *DB) DeleteUser(id string) error {
+	return s.conn.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BucketUsers))
+		return b.Delete([]byte(id))
+	})
+}
+
+func (s *DB) GetListUsers() ([]*model.User, error) {
+	var users []*model.User
+	err := s.conn.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BucketUsers))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var u model.User
+			err := json.Unmarshal(v, &u)
+			if err != nil {
+				return err
+			}
+			users = append(users, &u)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}

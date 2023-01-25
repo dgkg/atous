@@ -24,7 +24,12 @@ func initServiceUser(r *gin.Engine, db *db.DB) {
 }
 
 func (su *ServiceUser) getList(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"users": db.UserList})
+	us, err := su.db.GetListUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"users": us})
 }
 
 // restrives the user from the request body
@@ -43,12 +48,11 @@ func (su *ServiceUser) get(c *gin.Context) {
 // deletes the user from the request body
 func (su *ServiceUser) delete(c *gin.Context) {
 	id := c.Param("id")
-	_, ok := db.UserList[id]
-	if !ok {
+	err := su.db.DeleteUser(id)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	delete(db.UserList, id)
 	c.JSON(http.StatusAccepted, nil)
 }
 
@@ -108,8 +112,6 @@ func (su *ServiceUser) create(c *gin.Context) {
 		Age: user.Age,
 	})
 
-	//db.UserList[user.ID] = &user
-
 	err := su.db.CreateUser(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -121,8 +123,8 @@ func (su *ServiceUser) create(c *gin.Context) {
 
 func (su *ServiceUser) sayHi(c *gin.Context) {
 	id := c.Param("id")
-	user, ok := db.UserList[id]
-	if !ok {
+	user, err := su.db.GetUser(id)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
