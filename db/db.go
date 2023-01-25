@@ -140,3 +140,28 @@ func (s *DB) GetListUsers() ([]*model.User, error) {
 	}
 	return users, nil
 }
+
+func (s *DB) GetUserByEmail(email string) (*model.User, error) {
+	var u model.User
+
+	err := s.conn.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BucketUsers))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			err := json.Unmarshal(v, &u)
+			if err != nil {
+				return err
+			}
+			if u.Email == email {
+				return nil
+			}
+		}
+		return fmt.Errorf("User not found")
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}

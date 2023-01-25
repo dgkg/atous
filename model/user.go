@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/google/uuid"
 )
 
@@ -73,6 +74,11 @@ type User struct {
 	ConfigUser
 }
 
+type Login struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 type DBData struct {
 	ID string `json:"id"`
 	// DB dates.
@@ -102,8 +108,7 @@ func NewUser(email, password string, config *ConfigUser) *User {
 	}
 	u.CreateAt = time.Now()
 
-	log.Println("Model : NewUser:", u)
-
+	spew.Printf("Model : NewUser: %#v\n", u)
 	return &u
 }
 

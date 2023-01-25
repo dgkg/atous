@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 
 	"atous/db"
 	"atous/model"
@@ -21,6 +22,8 @@ func initServiceUser(r *gin.Engine, db *db.DB) {
 	r.GET("/users/:id", su.get)
 	r.DELETE("/users/:id", su.delete)
 	r.PATCH("/users/:id", su.update)
+	// login route
+	r.POST("/user-login", su.login)
 }
 
 func (su *ServiceUser) getList(c *gin.Context) {
@@ -108,8 +111,10 @@ func (su *ServiceUser) create(c *gin.Context) {
 		return
 	}
 
-	user = *model.NewUser(user.FirstName, user.LastName, &model.ConfigUser{
-		Age: user.Age,
+	user = *model.NewUser(user.Email, user.Password, &model.ConfigUser{
+		Age:       user.Age,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
 	})
 
 	err := su.db.CreateUser(&user)
@@ -129,4 +134,35 @@ func (su *ServiceUser) sayHi(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": user.SayHi()})
+}
+
+func (su *ServiceUser) login(c *gin.Context) {
+	var login model.Login
+	if err := c.ShouldBindJSON(&login); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	u, err := su.db.GetUserByEmail(login.Email)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if u.Password != login.Password {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong password"})
+		return
+	}
+
+	//c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":         u.ID,
+		"role_type":  u.RoleType,
+		"first_name": u.FirstName,
+	})
+
+	// Sign and get the complete encoded token as a string using the secret
+	tokenString, err := token.SignedString([]byte("secret"))
+
+	c.JSON(http.StatusOK, gin.H{"jwt": tokenString})
 }
