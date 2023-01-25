@@ -27,11 +27,13 @@ func New(dbName string) *DB {
 	dbConn := DB{conn: db}
 
 	err = db.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucket([]byte("Users"))
-		if err != nil {
-			return fmt.Errorf("create bucket: %s", err)
+		if tx.Bucket([]byte("Users")) == nil {
+			b, err := tx.CreateBucket([]byte("Users"))
+			if err != nil {
+				return fmt.Errorf("create bucket: %s", err)
+			}
+			dbConn.userList = b
 		}
-		dbConn.userList = b
 		return nil
 	})
 	if err != nil {
