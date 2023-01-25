@@ -9,7 +9,11 @@ type Config struct {
 
 // New creates a new configuration
 func New() *Config {
+	dbName := os.Getenv("ATOUS_DB_NAME")
+	if dbName == "" {
+		dbName = "atous.db"
+	}
 	return &Config{
-		DBName: os.Getenv("ATOUS_DB_NAME"),
+		DBName: dbName,
 	}
 }
