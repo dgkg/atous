@@ -36,23 +36,19 @@ func (sr *ServiceOrders) delete(c *gin.Context) {
 }
 
 func (sr *ServiceOrders) create(c *gin.Context) {
-	var user model.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var order model.Order
+	if err := c.ShouldBindJSON(&order); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user = *model.NewUser(user.FirstName, user.LastName, &model.ConfigUser{
-		Age: user.Age,
-	})
+	order = *model.NewOrder(order.RestaurantID, order.CustomerID)
 
-	//db.UserList[user.ID] = &user
-
-	err := sr.db.CreateUser(&user)
+	err := sr.db.CreateOrder(&order)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user})
+	c.JSON(http.StatusOK, gin.H{"order": order})
 }
