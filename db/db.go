@@ -9,6 +9,7 @@ import (
 	"atous/model"
 )
 
+// TODO: to delete
 var UserList = map[string]*model.User{}
 
 const (
