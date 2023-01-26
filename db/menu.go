@@ -1,13 +1,14 @@
 package db
 
 import (
-	"atous/model"
 	"encoding/json"
 	"fmt"
 	"log"
 
-	"github.com/boltdb/bolt"
 	"github.com/muyo/sno"
+	bolt "go.etcd.io/bbolt"
+
+	"atous/model"
 )
 
 func (s *DB) CreateMenu(m *model.Menu) error {

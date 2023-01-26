@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/boltdb/bolt"
+	bolt "go.etcd.io/bbolt"
 
 	"atous/model"
 )

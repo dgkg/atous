@@ -1,10 +1,10 @@
 package service
 
 import (
+	"github.com/gin-gonic/gin"
+
 	"atous/db"
 	"atous/geo"
-
-	"github.com/gin-gonic/gin"
 )
 
 func New(r *gin.Engine, db *db.DB, geocoder geo.Geocoder, googleAPIKey string) {

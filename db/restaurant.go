@@ -1,12 +1,13 @@
 package db
 
 import (
-	"atous/model"
 	"encoding/json"
 	"fmt"
 
-	"github.com/boltdb/bolt"
 	"github.com/muyo/sno"
+	bolt "go.etcd.io/bbolt"
+
+	"atous/model"
 )
 
 func (s *DB) CreateRestaurant(a *model.Restaurant) error {

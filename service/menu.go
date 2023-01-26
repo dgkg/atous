@@ -1,11 +1,12 @@
 package service
 
 import (
-	"atous/db"
-	"atous/model"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+
+	"atous/db"
+	"atous/model"
 )
 
 type ServiceMenu struct {
