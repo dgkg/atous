@@ -39,7 +39,7 @@ func TestMyIntAdd(t *testing.T) {
 		title    string
 		input    mathematiks.MyInt
 		input2   int
-		expected int
+		expected mathematiks.MyInt
 		err      error
 	}{
 		{title: "test max", input: math.MaxInt32, input2: 1, expected: math.MinInt32, err: nil},
@@ -56,4 +56,25 @@ func TestMyIntSub(t *testing.T) {
 }
 
 func TestMyIntMultiply(t *testing.T) {
+}
+
+func FuzzMyIntAddSub(f *testing.F) {
+	testparam := []int{1, math.MaxInt64, math.MinInt64}
+	for _, tc := range testparam {
+		f.Add(tc) // Use f.Add to provide a seed corpus
+	}
+	var i mathematiks.MyInt = 0
+	f.Fuzz(func(t *testing.T, orig int) {
+		i, err := i.Add(orig)
+		if err != nil {
+			return
+		}
+		i, err = i.Sub(int(i))
+		if err != nil {
+			return
+		}
+		if i != 0 {
+			t.Errorf("Before: %v, after: %v", 0, i)
+		}
+	})
 }

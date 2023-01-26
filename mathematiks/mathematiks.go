@@ -19,13 +19,13 @@ func (m MyInt) Divide(n int) (int, error) {
 }
 
 // Add : retourner la valeur ajouté par n de type int passé en paramètre
-func (m MyInt) Add(n int) (int, error) {
-	return int(m) + n, nil
+func (m MyInt) Add(n int) (MyInt, error) {
+	return MyInt(int(m) + n), nil
 }
 
 // Sub : retourner la valeur soustraite avec n toujours passé en paramètre
-func (m MyInt) Sub(n int) (int, error) {
-	return int(m) - n, nil
+func (m MyInt) Sub(n int) (MyInt, error) {
+	return MyInt(int(m) - n), nil
 }
 
 // Multiply : retourner la valeur multiplié des deux paramètres de type int en myInt
