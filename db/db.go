@@ -5,12 +5,7 @@ import (
 	"log"
 
 	bolt "go.etcd.io/bbolt"
-
-	"atous/model"
 )
-
-// TODO: to delete
-var UserList = map[string]*model.User{}
 
 const (
 	BucketUsers      = "Users"

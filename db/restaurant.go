@@ -63,3 +63,24 @@ func (s *DB) DeleteRestaurant(id string) error {
 		return b.Delete([]byte(id))
 	})
 }
+
+func (s *DB) GetListRestaurant() ([]*model.Restaurant, error) {
+	var resp []*model.Restaurant
+	err := s.conn.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BucketRestaurant))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var u model.Restaurant
+			err := json.Unmarshal(v, &u)
+			if err != nil {
+				return err
+			}
+			resp = append(resp, &u)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}

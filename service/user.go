@@ -7,15 +7,23 @@ import (
 	"github.com/golang-jwt/jwt"
 
 	"atous/db"
+	"atous/geo"
+	"atous/hash"
 	"atous/model"
 )
 
 type ServiceUser struct {
-	db *db.DB
+	db         *db.DB
+	geo        geo.Geocoder
+	jwtKeySign []byte
 }
 
-func initServiceUser(r *gin.Engine, db *db.DB) {
-	su := &ServiceUser{db: db}
+func initServiceUser(r *gin.Engine, db *db.DB, geocoder geo.Geocoder, jwtKeySign []byte) {
+	su := &ServiceUser{
+		db:         db,
+		geo:        geocoder,
+		jwtKeySign: jwtKeySign,
+	}
 	r.POST("/users", su.create)
 	r.GET("/users", su.getList)
 	r.GET("/users/:id/say-hi", su.sayHi)
@@ -111,16 +119,24 @@ func (su *ServiceUser) create(c *gin.Context) {
 		return
 	}
 
-	user = *model.NewUser(user.Email, user.Password, &model.ConfigUser{
-		Age:       user.Age,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-	})
-
 	err := su.db.CreateUser(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if user.Address != nil {
+		user.Address.UUIDOwner = user.ID
+		user.Address.Longitude, user.Address.Latitude, err = su.geo.Geocode(user.Address.String())
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		err = su.db.CreateAddress(user.Address)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"user": user})
@@ -137,19 +153,19 @@ func (su *ServiceUser) sayHi(c *gin.Context) {
 }
 
 func (su *ServiceUser) login(c *gin.Context) {
-	var login model.Login
-	if err := c.ShouldBindJSON(&login); err != nil {
+	var payload model.Login
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	u, err := su.db.GetUserByEmail(login.Email)
+	u, err := su.db.GetUserByEmail(payload.Email)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
 
-	if u.Password != login.Password {
+	if hash.Password(payload.Password) != u.Password {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong password"})
 		return
 	}
@@ -162,7 +178,7 @@ func (su *ServiceUser) login(c *gin.Context) {
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
-	tokenString, err := token.SignedString([]byte("secret"))
+	tokenString, err := token.SignedString(su.jwtKeySign)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

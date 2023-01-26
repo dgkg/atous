@@ -6,6 +6,7 @@ import "os"
 type Config struct {
 	DBName       string
 	GoogleAPIKey string
+	JWTKeySign   []byte
 }
 
 // New creates a new configuration
@@ -19,8 +20,13 @@ func New() *Config {
 		googleApiKey = "AIzaSyAU9ZJtU14RM2QNndxY0Z8TJ2zXLwt3Fnk"
 	}
 
+	JWTkey := os.Getenv("ATOUS_JWT_KEY")
+	if JWTkey == "" {
+		JWTkey = "test"
+	}
 	return &Config{
 		DBName:       dbName,
 		GoogleAPIKey: googleApiKey,
+		JWTKeySign:   []byte(JWTkey),
 	}
 }

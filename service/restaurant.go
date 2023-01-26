@@ -6,15 +6,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"atous/db"
+	"atous/geo"
 	"atous/model"
 )
 
 type ServiceRestaurant struct {
 	db              *db.DB
 	apiGoogleMapKey string
+	geo             geo.Geocoder
 }
 
-func initServiceRestaurant(r *gin.Engine, db *db.DB, googleAPIKey string) {
+func initServiceRestaurant(r *gin.Engine, db *db.DB, geocoder geo.Geocoder, googleAPIKey string) {
 	sr := &ServiceRestaurant{
 		db:              db,
 		apiGoogleMapKey: googleAPIKey,
@@ -27,7 +29,12 @@ func initServiceRestaurant(r *gin.Engine, db *db.DB, googleAPIKey string) {
 }
 
 func (sr *ServiceRestaurant) getList(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"restaurants": db.UserList})
+	rest, err := sr.db.GetListRestaurant()
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Restaurant not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"restaurants": rest})
 }
 
 // restrives the user from the request body
@@ -94,6 +101,16 @@ func (sr *ServiceRestaurant) create(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	if restaurant.Address != nil {
+		restaurant.Address.UUIDOwner = restaurant.ID
+		restaurant.Address.Longitude, restaurant.Address.Latitude, err = sr.geo.Geocode(restaurant.Address.String())
+		err = sr.db.CreateAddress(restaurant.Address)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"restaurant": restaurant})

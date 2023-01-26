@@ -31,7 +31,11 @@ func (sa *ServiceOrder) create(c *gin.Context) {
 		return
 	}
 
-	order = *model.NewOrder(order.RestaurantID, order.CustomerID, order.DriverID, order.MenuID, order.Price)
+	totalPrice := 0
+	for k := range order.Menus {
+		totalPrice += order.Menus[k].Price
+	}
+	order.Price = totalPrice
 
 	err := sa.db.CreateOrder(&order)
 	if err != nil {
@@ -77,16 +81,7 @@ func (sa *ServiceOrder) update(c *gin.Context) {
 		return
 	}
 
-	if value, ok := newOrder["menu_id"]; ok {
-		if v, ok := value.(string); ok {
-			order.MenuID = v
-		}
-	}
-	if value, ok := newOrder["price"]; ok {
-		if v, ok := value.(string); ok {
-			order.Price = v
-		}
-	}
+	setIntFromMap(newOrder, "price", &order.Price)
 
 	err = sa.db.UpdateOrder(id, order)
 	if err != nil {

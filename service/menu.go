@@ -23,21 +23,19 @@ func initServiceMenu(r *gin.Engine, db *db.DB) {
 }
 
 func (sm *ServiceMenu) create(c *gin.Context) {
-	var menu model.Menu
-	if err := c.ShouldBindJSON(&menu); err != nil {
+	var payload model.Menu
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	menu = *model.AddMenu(menu.RestaurantID, menu.Name, menu.Price, menu.ImageURI)
-
-	err := sm.db.CreateMenu(&menu)
+	err := sm.db.CreateMenu(&payload)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"menu": menu})
+	c.JSON(http.StatusOK, gin.H{"menu": payload})
 }
 
 func (sm *ServiceMenu) getList(c *gin.Context) {
@@ -78,21 +76,15 @@ func (sm *ServiceMenu) update(c *gin.Context) {
 		return
 	}
 
-	newMenu := map[string]interface{}{}
-	if err := c.ShouldBindJSON(&newMenu); err != nil {
+	payload := map[string]interface{}{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if value, ok := newMenu["name"]; ok {
-		if v, ok := value.(string); ok {
-			menu.Name = v
-		}
-	}
-	if value, ok := newMenu["price"]; ok {
-		if v, ok := value.(string); ok {
-			menu.Price = v
-		}
-	}
+
+	setStringFromMap(payload, "name", &menu.Name)
+	setIntFromMap(payload, "price", &menu.Price)
+	setStringFromMap(payload, "description", &menu.Description)
 
 	err = sm.db.UpdateMenu(id, menu)
 	if err != nil {
@@ -101,4 +93,20 @@ func (sm *ServiceMenu) update(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"menu": menu})
+}
+
+func setStringFromMap(m map[string]interface{}, key string, field *string) {
+	if value, ok := m[key]; ok {
+		if v, ok := value.(string); ok {
+			*field = v
+		}
+	}
+}
+
+func setIntFromMap(m map[string]interface{}, key string, field *int) {
+	if value, ok := m[key]; ok {
+		if v, ok := value.(int); ok {
+			*field = v
+		}
+	}
 }

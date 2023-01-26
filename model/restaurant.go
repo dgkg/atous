@@ -6,7 +6,7 @@ type Restaurant struct {
 	Phone string `json:"phone"`
 	Email string `json:"email"`
 
-	Address Address `json:"address"`
+	Address *Address `json:"address"`
 
 	Score string `json:"Score"`
 }

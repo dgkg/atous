@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/muyo/sno"
 	bolt "go.etcd.io/bbolt"
@@ -15,6 +16,7 @@ func (s *DB) CreateAddress(a *model.Address) error {
 		b := tx.Bucket([]byte(BucketAddress))
 
 		a.ID = "ad_" + sno.New(byte(1)).String()
+		a.CreateAt = time.Now()
 
 		buf, err := json.Marshal(a)
 		if err != nil {
@@ -25,11 +27,13 @@ func (s *DB) CreateAddress(a *model.Address) error {
 	})
 }
 
-func (s *DB) UpdateAddress(id string, u *model.Address) error {
+func (s *DB) UpdateAddress(id string, a *model.Address) error {
 	return s.conn.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketAddress))
 
-		buf, err := json.Marshal(u)
+		a.UpdateAt = time.Now()
+
+		buf, err := json.Marshal(a)
 		if err != nil {
 			return err
 		}

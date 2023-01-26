@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/muyo/sno"
 	bolt "go.etcd.io/bbolt"
 
+	"atous/hash"
 	"atous/model"
 )
 
@@ -16,6 +18,9 @@ func (s *DB) CreateUser(u *model.User) error {
 		b := tx.Bucket([]byte(BucketUsers))
 
 		u.ID = "us_" + sno.New(byte(1)).String()
+
+		u.Password = hash.Password(u.Password)
+		u.CreateAt = time.Now()
 
 		buf, err := json.Marshal(u)
 		if err != nil {

@@ -23,6 +23,6 @@ func main() {
 	r := gin.Default()
 	dbConn := db.New(conf.DBName)
 	geocoder := google.New(conf.GoogleAPIKey)
-	service.New(r, dbConn, geocoder, conf.GoogleAPIKey)
+	service.New(r, dbConn, geocoder, conf.JWTKeySign, conf.GoogleAPIKey)
 	r.Run()
 }

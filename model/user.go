@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"time"
-
-	"github.com/davecgh/go-spew/spew"
-	"github.com/google/uuid"
 )
 
 type Role int
@@ -68,9 +65,10 @@ func (r Role) MarshalJSON() ([]byte, error) {
 
 type User struct {
 	DBData
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	RoleType Role   `json:"role_type"`
+	Email    string   `json:"email"`
+	Password string   `json:"password"`
+	RoleType Role     `json:"role_type"`
+	Address  *Address `json:"address,omitempty"`
 	ConfigUser
 }
 
@@ -92,24 +90,6 @@ type ConfigUser struct {
 	LastName  string `json:"last_name"`
 	Phone     string `json:"phone"`
 	Age       int    `json:"age"`
-}
-
-func NewUser(email, password string, config *ConfigUser) *User {
-	var u User
-	u.ID = uuid.NewString()
-	u.Email = email
-	u.Password = password
-	u.RoleType = Customer
-	if config != nil {
-		u.Age = config.Age
-		u.FirstName = config.FirstName
-		u.LastName = config.LastName
-		u.Phone = config.Phone
-	}
-	u.CreateAt = time.Now()
-
-	spew.Printf("Model : NewUser: %#v\n", u)
-	return &u
 }
 
 func (u *User) SayHi() string {

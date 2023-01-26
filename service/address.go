@@ -30,29 +30,27 @@ func initServiceAddress(r *gin.Engine, db *db.DB, geocoder geo.Geocoder, googleA
 }
 
 func (sa *ServiceAddress) create(c *gin.Context) {
-	var address model.Address
-	if err := c.ShouldBindJSON(&address); err != nil {
+	var payload model.Address
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	address = *model.NewAddress(address.UUIDOwner, address.StreetName, address.ZIP, address.City)
-
-	long, lat, err := sa.geo.Geocode(address.StreetName + ", " + address.ZIP + ", " + address.City)
+	long, lat, err := sa.geo.Geocode(payload.String())
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	address.GeocodeLongitude = long
-	address.GeocodeLatitude = lat
+	payload.Longitude = long
+	payload.Latitude = lat
 
-	err = sa.db.CreateAddress(&address)
+	err = sa.db.CreateAddress(&payload)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"address": address})
+	c.JSON(http.StatusOK, gin.H{"address": payload})
 }
 
 func (sa *ServiceAddress) get(c *gin.Context) {
@@ -84,20 +82,21 @@ func (sa *ServiceAddress) update(c *gin.Context) {
 		return
 	}
 
-	newAddress := map[string]interface{}{}
-	if err := c.ShouldBindJSON(&newAddress); err != nil {
+	payload := map[string]interface{}{}
+	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if value, ok := newAddress["zip"]; ok {
-		if v, ok := value.(string); ok {
-			address.ZIP = v
-		}
-	}
-	if value, ok := newAddress["city"]; ok {
-		if v, ok := value.(string); ok {
-			address.City = v
-		}
+
+	setStringFromMap(payload, "street_name", &address.StreetName)
+	setStringFromMap(payload, "zip", &address.ZIP)
+	setStringFromMap(payload, "city", &address.City)
+	setStringFromMap(payload, "country", &address.Country)
+
+	address.Longitude, address.Latitude, err = sa.geo.Geocode(address.String())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
 	err = sa.db.UpdateAddress(id, address)

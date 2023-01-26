@@ -3,7 +3,7 @@ package db
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"time"
 
 	"github.com/muyo/sno"
 	bolt "go.etcd.io/bbolt"
@@ -16,6 +16,7 @@ func (s *DB) CreateMenu(m *model.Menu) error {
 		b := tx.Bucket([]byte(BucketMenu))
 
 		m.ID = "me_" + sno.New(byte(1)).String()
+		m.CreateAt = time.Now()
 
 		buf, err := json.Marshal(m)
 		if err != nil {
@@ -29,6 +30,8 @@ func (s *DB) CreateMenu(m *model.Menu) error {
 func (s *DB) UpdateMenu(id string, m *model.Menu) error {
 	return s.conn.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketMenu))
+
+		m.UpdateAt = time.Now()
 
 		buf, err := json.Marshal(m)
 		if err != nil {
@@ -44,10 +47,9 @@ func (s *DB) GetMenu(id string) (*model.Menu, error) {
 
 	err := s.conn.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketMenu))
-		log.Println("GetMenu id:", id)
 		v := b.Get([]byte(id))
 		if v == nil {
-			return fmt.Errorf("Menu not found")
+			return fmt.Errorf("menu not found")
 		}
 		return json.Unmarshal(v, &m)
 	})
