@@ -50,14 +50,13 @@ func (sm *ServiceMenu) getList(c *gin.Context) {
 
 func (sm *ServiceMenu) get(c *gin.Context) {
 	id := c.Param("id")
-	//user, ok := db.UserList[id]
-	menu, err := sm.db.GetMenu(id)
 
+	menu, err := sm.db.GetMenu(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu not found"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"Menu": menu})
+	c.JSON(http.StatusOK, gin.H{"menu": menu})
 }
 
 func (sm *ServiceMenu) delete(c *gin.Context) {

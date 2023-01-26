@@ -163,6 +163,10 @@ func (su *ServiceUser) login(c *gin.Context) {
 
 	// Sign and get the complete encoded token as a string using the secret
 	tokenString, err := token.SignedString([]byte("secret"))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"jwt": tokenString})
 }

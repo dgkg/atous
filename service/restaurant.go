@@ -10,11 +10,15 @@ import (
 )
 
 type ServiceRestaurant struct {
-	db *db.DB
+	db              *db.DB
+	apiGoogleMapKey string
 }
 
-func initServiceRestaurant(r *gin.Engine, db *db.DB) {
-	sr := &ServiceRestaurant{db: db}
+func initServiceRestaurant(r *gin.Engine, db *db.DB, googleAPIKey string) {
+	sr := &ServiceRestaurant{
+		db:              db,
+		apiGoogleMapKey: googleAPIKey,
+	}
 	r.POST("/restaurants", sr.create)
 	r.GET("/restaurants", sr.getList)
 	r.GET("/restaurants/:id", sr.get)
@@ -30,77 +34,67 @@ func (sr *ServiceRestaurant) getList(c *gin.Context) {
 func (sr *ServiceRestaurant) get(c *gin.Context) {
 	id := c.Param("id")
 	//user, ok := db.UserList[id]
-	user, err := sr.db.GetUser(id)
+	restaurant, err := sr.db.GetRestaurant(id)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Restaurant not found"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"restaurants": user})
+	c.JSON(http.StatusOK, gin.H{"restaurants": restaurant})
 }
 
 // deletes the user from the request body
 func (sr *ServiceRestaurant) delete(c *gin.Context) {
 	id := c.Param("id")
-	_, ok := db.UserList[id]
-	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	_, err := sr.db.GetRestaurant(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Restaurant not found"})
 		return
 	}
-	delete(db.UserList, id)
+
+	err = sr.db.DeleteRestaurant(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Restaurant not found"})
+		return
+	}
 	c.JSON(http.StatusAccepted, nil)
 }
 
 // updates the user from the request body
 func (sr *ServiceRestaurant) update(c *gin.Context) {
 	id := c.Param("id")
-	user, ok := db.UserList[id]
-	if !ok {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+	restaurant, err := sr.db.GetRestaurant(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Restaurant not found"})
 		return
 	}
 
-	newUser := map[string]interface{}{}
-	if err := c.ShouldBindJSON(&newUser); err != nil {
+	newRestaurant := map[string]interface{}{}
+	if err := c.ShouldBindJSON(&newRestaurant); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if value, ok := newUser["first_name"]; ok {
+	if value, ok := newRestaurant["name"]; ok {
 		if v, ok := value.(string); ok {
-			user.FirstName = v
+			restaurant.Name = v
 		}
 	}
-	if value, ok := newUser["last_name"]; ok {
-		if v, ok := value.(string); ok {
-			user.LastName = v
-		}
-	}
-	if value, ok := newUser["age"]; ok {
-		if v, ok := value.(int); ok {
-			user.Age = v
-		}
-	}
-	c.JSON(http.StatusOK, gin.H{"user": user})
+
+	c.JSON(http.StatusOK, gin.H{"restaurant": restaurant})
 }
 
 func (sr *ServiceRestaurant) create(c *gin.Context) {
-	var user model.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var restaurant model.Restaurant
+	if err := c.ShouldBindJSON(&restaurant); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	user = *model.NewUser(user.FirstName, user.LastName, &model.ConfigUser{
-		Age: user.Age,
-	})
-
-	//db.UserList[user.ID] = &user
-
-	err := sr.db.CreateUser(&user)
+	err := sr.db.CreateRestaurant(&restaurant)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user})
+	c.JSON(http.StatusOK, gin.H{"restaurant": restaurant})
 }
