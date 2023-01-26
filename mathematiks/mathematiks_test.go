@@ -1,9 +1,12 @@
 package mathematiks_test
 
 import (
-	"atous/mathematiks"
 	"math"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
+
+	"atous/mathematiks"
 )
 
 func TestMyIntDivide(t *testing.T) {
@@ -76,5 +79,19 @@ func FuzzMyIntAddSub(f *testing.F) {
 		if i != 0 {
 			t.Errorf("Before: %v, after: %v", 0, i)
 		}
+	})
+}
+
+func TestSpec(t *testing.T) {
+
+	// Only pass t into top-level Convey calls
+	Convey("Given some integer with a starting value", t, func() {
+		x := mathematiks.MyInt(1)
+		Convey("When the integer is incremented", func() {
+			got, _ := x.Add(1)
+			Convey("The value should be greater by one", func() {
+				So(got, ShouldEqual, 0)
+			})
+		})
 	})
 }
