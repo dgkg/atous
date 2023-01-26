@@ -90,7 +90,7 @@ func TestSpec(t *testing.T) {
 		Convey("When the integer is incremented", func() {
 			got, _ := x.Add(1)
 			Convey("The value should be greater by one", func() {
-				So(got, ShouldEqual, 0)
+				So(got, ShouldEqual, 2)
 			})
 		})
 	})

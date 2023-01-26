@@ -7,6 +7,7 @@ import (
 
 	"atous/config"
 	"atous/db"
+	"atous/geo/google"
 	"atous/service"
 )
 
@@ -21,6 +22,7 @@ func init() {
 func main() {
 	r := gin.Default()
 	dbConn := db.New(conf.DBName)
-	service.New(r, dbConn, conf.GoogleAPIKey)
+	geocoder := google.New(conf.GoogleAPIKey)
+	service.New(r, dbConn, geocoder, conf.GoogleAPIKey)
 	r.Run()
 }
