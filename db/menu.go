@@ -85,3 +85,31 @@ func (s *DB) GetListMenu() ([]*model.Menu, error) {
 	}
 	return menus, nil
 }
+
+func (s *DB) GetMenuByRestaurant(idRestaurant string) ([]*model.Menu, error) {
+	var menus []*model.Menu
+	err := s.conn.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BucketMenu))
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			var m model.Menu
+			err := json.Unmarshal(v, &m)
+			if err != nil {
+				return err
+			}
+			menus = append(menus, &m)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var menusRestaurant []*model.Menu
+	for k := range menus {
+		if menus[k].RestaurantID == idRestaurant {
+			menusRestaurant = append(menusRestaurant, menus[k])
+		}
+	}
+	return menusRestaurant, nil
+}
