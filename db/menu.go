@@ -10,7 +10,7 @@ import (
 	"github.com/muyo/sno"
 )
 
-func (s *DB) Create(m *model.Menu) error {
+func (s *DB) CreateMenu(m *model.Menu) error {
 	return s.conn.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketMenu))
 
@@ -25,7 +25,7 @@ func (s *DB) Create(m *model.Menu) error {
 	})
 }
 
-func (s *DB) Update(id string, m *model.Menu) error {
+func (s *DB) UpdateMenu(id string, m *model.Menu) error {
 	return s.conn.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketMenu))
 
@@ -38,7 +38,7 @@ func (s *DB) Update(id string, m *model.Menu) error {
 	})
 }
 
-func (s *DB) Get(id string) (*model.Menu, error) {
+func (s *DB) GetMenu(id string) (*model.Menu, error) {
 	var m model.Menu
 
 	err := s.conn.View(func(tx *bolt.Tx) error {
@@ -58,14 +58,14 @@ func (s *DB) Get(id string) (*model.Menu, error) {
 	return &m, nil
 }
 
-func (s *DB) Delete(id string) error {
+func (s *DB) DeleteMenu(id string) error {
 	return s.conn.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketMenu))
 		return b.Delete([]byte(id))
 	})
 }
 
-func (s *DB) GetList() ([]*model.Menu, error) {
+func (s *DB) GetListMenu() ([]*model.Menu, error) {
 	var menus []*model.Menu
 	err := s.conn.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketMenu))

@@ -8,4 +8,5 @@ import (
 
 func New(r *gin.Engine, db *db.DB) {
 	initServiceUser(r, db)
+	initServiceMenu(r, db)
 }

@@ -15,9 +15,10 @@ type Menu struct {
 	ImageURI     string `json:"image"`
 }
 
-func AddMenu(name, price, imageURI string) *Menu {
+func AddMenu(restaurantID, name, price, imageURI string) *Menu {
 	var m Menu
-	m.RestaurantID = uuid.NewString()
+	m.ID = uuid.NewString()
+	m.RestaurantID = restaurantID
 	m.Name = name
 	m.Price = price
 	m.ImageURI = imageURI

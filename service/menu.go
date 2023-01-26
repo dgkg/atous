@@ -14,11 +14,11 @@ type ServiceMenu struct {
 
 func initServiceMenu(r *gin.Engine, db *db.DB) {
 	sm := &ServiceMenu{db: db}
-	r.POST("/Menu", sm.create)
-	r.GET("/restaurants", sm.getList)
-	r.GET("/restaurants/:id", sm.get)
-	r.DELETE("/restaurants/:id", sm.delete)
-	r.PATCH("/restaurants/:id", sm.update)
+	r.POST("/menu", sm.create)
+	r.GET("/menu", sm.getList)
+	r.GET("/menu/:id", sm.get)
+	r.DELETE("/menu/:id", sm.delete)
+	r.PATCH("/menu/:id", sm.update)
 }
 
 func (sm *ServiceMenu) create(c *gin.Context) {
@@ -28,9 +28,9 @@ func (sm *ServiceMenu) create(c *gin.Context) {
 		return
 	}
 
-	menu = *model.AddMenu(menu.Name, menu.Price, menu.ImageURI)
+	menu = *model.AddMenu(menu.RestaurantID, menu.Name, menu.Price, menu.ImageURI)
 
-	err := sm.db.Create(&menu)
+	err := sm.db.CreateMenu(&menu)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -40,18 +40,18 @@ func (sm *ServiceMenu) create(c *gin.Context) {
 }
 
 func (sm *ServiceMenu) getList(c *gin.Context) {
-	m, err := sm.db.GetList()
+	ms, err := sm.db.GetListMenu()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"menus": m})
+	c.JSON(http.StatusOK, gin.H{"menus": ms})
 }
 
 func (sm *ServiceMenu) get(c *gin.Context) {
 	id := c.Param("id")
 	//user, ok := db.UserList[id]
-	menu, err := sm.db.Get(id)
+	menu, err := sm.db.GetMenu(id)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu not found"})
@@ -62,7 +62,7 @@ func (sm *ServiceMenu) get(c *gin.Context) {
 
 func (sm *ServiceMenu) delete(c *gin.Context) {
 	id := c.Param("id")
-	err := sm.db.Delete(id)
+	err := sm.db.DeleteMenu(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu not found"})
 		return
@@ -72,7 +72,7 @@ func (sm *ServiceMenu) delete(c *gin.Context) {
 
 func (sm *ServiceMenu) update(c *gin.Context) {
 	id := c.Param("id")
-	menu, err := sm.db.Get(id)
+	menu, err := sm.db.GetMenu(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Menu not found"})
 		return
@@ -94,7 +94,7 @@ func (sm *ServiceMenu) update(c *gin.Context) {
 		}
 	}
 
-	err = sm.db.Update(id, menu)
+	err = sm.db.UpdateMenu(id, menu)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
