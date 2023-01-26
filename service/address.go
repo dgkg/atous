@@ -1,6 +1,8 @@
 package service
 
 import (
+	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -10,11 +12,15 @@ import (
 )
 
 type ServiceAddress struct {
-	db *db.DB
+	db              *db.DB
+	apiGoogleMapKey string
 }
 
-func initServiceAddress(r *gin.Engine, db *db.DB) {
-	sa := &ServiceAddress{db: db}
+func initServiceAddress(r *gin.Engine, db *db.DB, googleAPIKey string) {
+	sa := &ServiceAddress{
+		db:              db,
+		apiGoogleMapKey: googleAPIKey,
+	}
 
 	r.POST("/address", sa.create)
 	r.GET("/address/:id", sa.get)
@@ -29,15 +35,46 @@ func (sa *ServiceAddress) create(c *gin.Context) {
 		return
 	}
 
-	address = *model.NewAddress(address.UUIDOwner, address.StreetName, address.ZIP, address.City, address.GeocodeLatitude, address.GeocodeLongitude)
+	address = *model.NewAddress(address.UUIDOwner, address.StreetName, address.ZIP, address.City)
 
-	err := sa.db.CreateAddress(&address)
+	err := geocode(sa.apiGoogleMapKey, &address)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	err = sa.db.CreateAddress(&address)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"address": address})
+}
+
+const (
+	APIgoogleMAPS = "https://maps.googleapis.com/maps/api/geocode/json?address="
+)
+
+func geocode(key string, a *model.Address) error {
+	var url = APIgoogleMAPS + a.StreetName + "," + a.City + "+" + a.ZIP + "&key=" + key
+	r, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := http.DefaultClient.Do(r)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	log.Println(string(data))
+
+	return nil
 }
 
 func (sa *ServiceAddress) get(c *gin.Context) {

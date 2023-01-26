@@ -21,6 +21,6 @@ func init() {
 func main() {
 	r := gin.Default()
 	dbConn := db.New(conf.DBName)
-	service.New(r, dbConn)
+	service.New(r, dbConn, conf.GoogleAPIKey)
 	r.Run()
 }

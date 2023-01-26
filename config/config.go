@@ -18,7 +18,6 @@ func New() *Config {
 	if googleApiKey == "" {
 		googleApiKey = "AIzaSyAU9ZJtU14RM2QNndxY0Z8TJ2zXLwt3Fnk"
 	}
-	// https://maps.googleapis.com/maps/api/geocode/json?address=Washington&key=YOUR_API_KEY
 
 	return &Config{
 		DBName:       dbName,
