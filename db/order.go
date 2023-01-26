@@ -21,7 +21,7 @@ func (s *DB) CreateOrder(o *model.Order) error {
 			return err
 		}
 
-		return b.Put([]byte(u.ID), buf)
+		return b.Put([]byte(o.ID), buf)
 	})
 }
 
@@ -29,7 +29,7 @@ func (s *DB) GetOrders(id string) (*model.Order, error) {
 	var o model.Order
 
 	err := s.conn.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte(BucketUsers))
+		b := tx.Bucket([]byte(BucketOrder))
 		log.Println("GetOrder id:", id)
 		v := b.Get([]byte(id))
 		if v == nil {
