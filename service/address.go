@@ -1,9 +1,11 @@
 package service
 
 import (
+	"encoding/json"
+	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
 
@@ -52,13 +54,18 @@ func (sa *ServiceAddress) create(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"address": address})
 }
 
-const (
-	APIgoogleMAPS = "https://maps.googleapis.com/maps/api/geocode/json?address="
-)
-
 func geocode(key string, a *model.Address) error {
-	var url = APIgoogleMAPS + a.StreetName + "," + a.City + "+" + a.ZIP + "&key=" + key
-	r, err := http.NewRequest("GET", url, nil)
+
+	var u url.URL
+	u.Scheme = "https"
+	u.Host = "maps.googleapis.com"
+	u.Path = "/maps/api/geocode/json"
+	value := url.Values{}
+	value.Add("address", a.StreetName+" "+a.ZIP+" "+a.City)
+	value.Add("key", key)
+	u.RawQuery = value.Encode()
+
+	r, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -72,9 +79,56 @@ func geocode(key string, a *model.Address) error {
 	if err != nil {
 		return err
 	}
-	log.Println(string(data))
+
+	var respGoogleMap googleMapResponse
+	err = json.Unmarshal(data, &respGoogleMap)
+	if err != nil {
+		return err
+	}
+
+	if respGoogleMap.Results == nil {
+		return errors.New("no result")
+	}
+
+	a.GeocodeLatitude = respGoogleMap.Results[0].Geometry.Location.Lat
+	a.GeocodeLongitude = respGoogleMap.Results[0].Geometry.Location.Lng
 
 	return nil
+}
+
+type googleMapResponse struct {
+	Results []struct {
+		AddressComponents []struct {
+			LongName  string   `json:"long_name"`
+			ShortName string   `json:"short_name"`
+			Types     []string `json:"types"`
+		} `json:"address_components"`
+		FormattedAddress string `json:"formatted_address"`
+		Geometry         struct {
+			Location struct {
+				Lat float64 `json:"lat"`
+				Lng float64 `json:"lng"`
+			} `json:"location"`
+			LocationType string `json:"location_type"`
+			Viewport     struct {
+				Northeast struct {
+					Lat float64 `json:"lat"`
+					Lng float64 `json:"lng"`
+				} `json:"northeast"`
+				Southwest struct {
+					Lat float64 `json:"lat"`
+					Lng float64 `json:"lng"`
+				} `json:"southwest"`
+			} `json:"viewport"`
+		} `json:"geometry"`
+		PlaceID  string `json:"place_id"`
+		PlusCode struct {
+			CompoundCode string `json:"compound_code"`
+			GlobalCode   string `json:"global_code"`
+		} `json:"plus_code"`
+		Types []string `json:"types"`
+	} `json:"results"`
+	Status string `json:"status"`
 }
 
 func (sa *ServiceAddress) get(c *gin.Context) {
