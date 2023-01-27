@@ -11,7 +11,6 @@ import (
 // Map is a Google Map API client
 // https://developers.google.com/maps/documentation/geocoding/intro
 // https://developers.google.com/maps/documentation/geocoding/overview
-// https://developers.google.com/maps/documentation/geocoding/start
 // It's used to get the longitude and latitude of an address
 // from an address ex: "1 rue de la paix, 75000 Paris, France".
 // It implements the Geocoder interface.
