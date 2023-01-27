@@ -20,24 +20,25 @@ var modelList = []string{
 	BucketAddress, BucketMenu, BucketOrder,
 }
 
+// DB is the database struct it holds the connection to the database.
 type DB struct {
-	conn     *bolt.DB
-	userList *bolt.Bucket
+	conn *bolt.DB
 }
 
 func New(dbName string) *DB {
+	// Open the my.db data file in your current directory.
 	db, err := bolt.Open(dbName, 0600, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// create the DB struct and pass the db connection
 	dbConn := DB{conn: db}
-
+	// create the buckets it they don't exist
 	err = createModel(dbConn.conn)
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	// return the DB struct
 	return &dbConn
 }
 
