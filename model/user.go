@@ -3,7 +3,6 @@ package model
 import (
 	"encoding/json"
 	"log"
-	"time"
 )
 
 type Role int
@@ -63,26 +62,27 @@ func (r Role) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + r.String() + `"`), nil
 }
 
+// User is the model for a user.
 type User struct {
+	// DBData are the fields that are stored in the database.
 	DBData
-	Email    string   `json:"email"`
-	Password string   `json:"password"`
-	RoleType Role     `json:"role_type"`
-	Address  *Address `json:"address,omitempty"`
+	// Email is the user's email.
+	Email string `json:"email"`
+	// Password is the user's password.
+	Password *string `json:"password,omitempty"`
+	// RoleType is the user's role.
+	RoleType Role `json:"role_type"`
+	// Address is the user's address.
+	Address *Address `json:"address,omitempty"`
+	// ConfigUser is the user's optional fields.
 	ConfigUser
 }
 
+// Login is the model for a login.
+// It helps to validate the user's email and password.
 type Login struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
-}
-
-type DBData struct {
-	ID string `json:"id"`
-	// DB dates.
-	CreateAt time.Time  `json:"create_at"`
-	UpdateAt time.Time  `json:"update_at"`
-	DeleteAt *time.Time `json:"delete_at"`
 }
 
 type ConfigUser struct {

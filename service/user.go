@@ -3,6 +3,7 @@ package service
 import (
 	"net/http"
 
+	"github.com/barkimedes/go-deepcopy"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 
@@ -40,6 +41,12 @@ func (su *ServiceUser) getList(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// empty passwords
+	for i := 0; i < len(us); i++ {
+		us[i].Password = nil
+	}
+
 	c.JSON(http.StatusOK, gin.H{"users": us})
 }
 
@@ -50,9 +57,13 @@ func (su *ServiceUser) get(c *gin.Context) {
 	user, err := su.db.GetUser(id)
 
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
+
+	// empty password
+	user.Password = nil
+
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
@@ -61,7 +72,7 @@ func (su *ServiceUser) delete(c *gin.Context) {
 	id := c.Param("id")
 	err := su.db.DeleteUser(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
 	c.JSON(http.StatusAccepted, nil)
@@ -69,108 +80,123 @@ func (su *ServiceUser) delete(c *gin.Context) {
 
 // updates the user from the request body
 func (su *ServiceUser) update(c *gin.Context) {
+	// get the user id param
 	id := c.Param("id")
+	// get the user from the db
 	user, err := su.db.GetUser(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
-
+	// get the body of the request and map it to a map
 	newUser := map[string]interface{}{}
 	if err := c.ShouldBindJSON(&newUser); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if value, ok := newUser["first_name"]; ok {
-		if v, ok := value.(string); ok {
-			user.FirstName = v
-		}
-	}
-	if value, ok := newUser["last_name"]; ok {
-		if v, ok := value.(string); ok {
-			user.LastName = v
-		}
-	}
-	if value, ok := newUser["age"]; ok {
-		if v, ok := value.(int); ok {
-			user.Age = v
-		}
-	}
-
+	// update the user with the new values
+	setStringFromMap(newUser, "first_name", &user.FirstName)
+	setStringFromMap(newUser, "last_name", &user.LastName)
+	setStringFromMap(newUser, "email", &user.Email)
+	setIntFromMap(newUser, "age", &user.Age)
 	if value, ok := newUser["role_type"]; ok {
 		if v, ok := value.(string); ok {
 			user.RoleType = model.ToRoleType(v)
 		}
 	}
-
+	// update the user in the db
 	err = su.db.UpdateUser(id, user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	// empty password.
+	user.Password = nil
+	// return the updated user
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
+// creates a new user from the request body
 func (su *ServiceUser) create(c *gin.Context) {
+	// get the user from the request body
 	var user model.User
 	if err := c.ShouldBindJSON(&user); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	// copy the address from the user
+	var a *model.Address
+	if user.Address != nil {
+		v, _ := deepcopy.Anything(user.Address)
+		a = v.(*model.Address)
+		user.Address = nil
+	}
+	// save the user in the db
 	err := su.db.CreateUser(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	if user.Address != nil {
-		user.Address.UUIDOwner = user.ID
-		user.Address.Longitude, user.Address.Latitude, err = su.geo.Geocode(user.Address.String())
+	// save the address in the db
+	if a != nil {
+		// add the user id to the address
+		a.UUIDOwner = user.ID
+		// geocode the address
+		a.Longitude, a.Latitude, err = su.geo.Geocode(a.String())
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		err = su.db.CreateAddress(user.Address)
+		// save the address in the db
+		err = su.db.CreateAddress(a)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
+		// set the address in the user
+		user.Address = a
 	}
 
+	// empty password.
+	user.Password = nil
+	// return the created user
 	c.JSON(http.StatusOK, gin.H{"user": user})
 }
 
+// sayHi returns a message from the user
 func (su *ServiceUser) sayHi(c *gin.Context) {
+	// get the user id param
 	id := c.Param("id")
+	// get the user from the db
 	user, err := su.db.GetUser(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
+	// return the message
 	c.JSON(http.StatusOK, gin.H{"message": user.SayHi()})
 }
 
 func (su *ServiceUser) login(c *gin.Context) {
+	// get the login and password from the request body
 	var payload model.Login
 	if err := c.ShouldBindJSON(&payload); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
+	// get the corresponding user from the db with the email
 	u, err := su.db.GetUserByEmail(payload.Email)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
-
-	if hash.Password(payload.Password) != u.Password {
+	// check the password
+	if u.Password != nil && hash.Password(payload.Password) != *u.Password {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong password"})
 		return
 	}
 
-	//c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	// Create the JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":         u.ID,
 		"role_type":  u.RoleType,
@@ -183,6 +209,6 @@ func (su *ServiceUser) login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
+	// return the token
 	c.JSON(http.StatusOK, gin.H{"jwt": tokenString})
 }

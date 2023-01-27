@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -19,7 +20,9 @@ func (s *DB) CreateUser(u *model.User) error {
 
 		u.ID = "us_" + sno.New(byte(1)).String()
 
-		u.Password = hash.Password(u.Password)
+		if u.Password != nil {
+			*u.Password = hash.Password(*u.Password)
+		}
 		u.CreateAt = time.Now()
 
 		buf, err := json.Marshal(u)
@@ -93,26 +96,28 @@ func (s *DB) GetListUsers() ([]*model.User, error) {
 }
 
 func (s *DB) GetUserByEmail(email string) (*model.User, error) {
-	var u model.User
+	var ur *model.User
 
 	err := s.conn.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BucketUsers))
 		c := b.Cursor()
+		var u model.User
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			err := json.Unmarshal(v, &u)
 			if err != nil {
 				return err
 			}
 			if u.Email == email {
+				ur = &u
 				return nil
 			}
 		}
-		return fmt.Errorf("User not found")
+		return errors.New("db: user not found")
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &u, nil
+	return ur, nil
 }

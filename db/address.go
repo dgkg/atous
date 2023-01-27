@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/muyo/sno"
@@ -87,4 +88,31 @@ func (s *DB) GetListAddress() ([]*model.Address, error) {
 		return nil, err
 	}
 	return adds, nil
+}
+
+func (s *DB) GetAddressByOwner(idOwner string) (*model.Address, error) {
+	log.Println("GetAddressByOwner", idOwner)
+	var add *model.Address
+	err := s.conn.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BucketAddress))
+		c := b.Cursor()
+		var a model.Address
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			err := json.Unmarshal(v, &a)
+			if err != nil {
+				return err
+			}
+			log.Println("GetAddressByOwner search:", a.UUIDOwner)
+			if a.UUIDOwner == idOwner {
+				log.Println("GetAddressByOwner found:", add)
+				add = &a
+				return nil
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return add, nil
 }
