@@ -18,7 +18,7 @@ func TestGeocode(t *testing.T) {
 		t.Error("got empty geocode")
 	}
 
-	longExpected, latExpected := 48.8697792, 2.3319534
+	longExpected, latExpected := 2.3319534, 48.8697792
 	if long != longExpected || lat != latExpected {
 		t.Error("got wrong geocode", long, lat, longExpected, latExpected)
 	}

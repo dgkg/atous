@@ -58,6 +58,7 @@ func (sa *ServiceAddress) create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	// return the created address
 	c.JSON(http.StatusOK, gin.H{"address": payload})
 }
