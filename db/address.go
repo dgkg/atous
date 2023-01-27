@@ -102,7 +102,6 @@ func (s *DB) GetAddressByOwner(idOwner string) (*model.Address, error) {
 			if err != nil {
 				return err
 			}
-			log.Println("GetAddressByOwner search:", a.UUIDOwner)
 			if a.UUIDOwner == idOwner {
 				log.Println("GetAddressByOwner found:", add)
 				add = &a
