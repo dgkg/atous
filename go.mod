@@ -6,6 +6,7 @@ require (
 	github.com/barkimedes/go-deepcopy v0.0.0-20220514131651-17c30cfc62df
 	github.com/gin-gonic/gin v1.8.2
 	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/muyo/sno v1.2.1
 	github.com/smartystreets/goconvey v1.7.2
 	go.etcd.io/bbolt v1.3.6

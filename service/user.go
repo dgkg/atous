@@ -2,14 +2,16 @@ package service
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/barkimedes/go-deepcopy"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
 
 	"atous/db"
 	"atous/geo"
 	"atous/hash"
+	"atous/middleware"
 	"atous/model"
 )
 
@@ -20,19 +22,24 @@ type ServiceUser struct {
 }
 
 func initServiceUser(r *gin.Engine, db *db.DB, geocoder geo.Geocoder, jwtKeySign []byte) {
+	// create the service
 	su := &ServiceUser{
 		db:         db,
 		geo:        geocoder,
 		jwtKeySign: jwtKeySign,
 	}
+
+	adminRole := middleware.AccessLevel(jwtKeySign, []model.Role{model.Admin})
+
+	// register the endpoints
 	r.POST("/users", su.create)
-	r.GET("/users", su.getList)
+	r.GET("/users", adminRole, su.getList)
 	r.GET("/users/:id/say-hi", su.sayHi)
 	r.GET("/users/:id", su.get)
 	r.DELETE("/users/:id", su.delete)
 	r.PATCH("/users/:id", su.update)
 	// login route
-	r.POST("/user-login", su.login)
+	r.POST("/users/login", su.login)
 }
 
 func (su *ServiceUser) getList(c *gin.Context) {
@@ -200,9 +207,10 @@ func (su *ServiceUser) login(c *gin.Context) {
 
 	// Create the JWT
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":         u.ID,
+		"user_id":    u.ID,
 		"role_type":  u.RoleType,
 		"first_name": u.FirstName,
+		"nbf":        time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
