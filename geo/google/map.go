@@ -1,11 +1,13 @@
 package google
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // Map is a Google Map API client
@@ -43,8 +45,11 @@ func (m *Map) Geocode(address string) (long float64, lat float64, err error) {
 	value.Add("address", address)
 	value.Add("key", m.apiKey)
 	u.RawQuery = value.Encode()
+	// create the request context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 	// create the request
-	r, err := http.NewRequest("GET", u.String(), nil)
+	r, err := http.NewRequestWithContext(ctx, "GET", u.String(), nil)
 	if err != nil {
 		return 0, 0, err
 	}

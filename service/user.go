@@ -1,7 +1,10 @@
 package service
 
 import (
+	"fmt"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/barkimedes/go-deepcopy"
 	"github.com/gin-gonic/gin"
@@ -137,6 +140,10 @@ func (su *ServiceUser) create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go SayHello(user.FirstName, &wg)
+
 	// save the address in the db
 	if a != nil {
 		// add the user id to the address
@@ -159,8 +166,15 @@ func (su *ServiceUser) create(c *gin.Context) {
 
 	// empty password.
 	user.Password = nil
+	wg.Wait()
 	// return the created user
 	c.JSON(http.StatusOK, gin.H{"user": user})
+}
+
+func SayHello(str string, wg *sync.WaitGroup) {
+	time.Sleep(5 * time.Second)
+	fmt.Println("serviceUser: Hello ", str)
+	wg.Done()
 }
 
 // sayHi returns a message from the user
